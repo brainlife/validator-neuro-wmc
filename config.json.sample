@@ -1,5 +1,8 @@
 {
-	"classification": "testdata/classification.mat",
-	"parc": "testdata/parc.nii.gz",
-	"label": "testdata/label.json"
+	".classification": "testdata/5d9168429842207eb17ec5ea/classification",
+	".tracts": "testdata/5d9168429842207eb17ec5ea/tracts",
+	".surfaces": "testdata/5d9168429842207eb17ec5ea/surfaces",
+	"classification": "testdata/classifiber/classification",
+	"tracts": "testdata/classifiber/tracts",
+	"surfaces": "testdata/classifiber/surfaces"
 }
