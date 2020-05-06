@@ -9,7 +9,7 @@ import sys
 with open('config.json', encoding='utf8') as config_json:
     config = json.load(config_json)
 
-results = {"errors": [], "warnings": []}
+results = {"errors": [], "warnings": [], "meta": {}, "brainlife": []}
 
 if not os.path.exists("output"):
     os.mkdir("output")
@@ -41,8 +41,7 @@ def validate_classification():
         return
 
     try:
-        names = m["classification"]["names"].all()
-        print(names)
+        names = list(m["classification"]["names"].all())
     except ValueError:
         results["errors"].append("no names field inside classification struct");
         return
@@ -56,9 +55,15 @@ def validate_classification():
 
     #count numbers of values
     np.set_printoptions(threshold=sys.maxsize)
-    unique_elements, counts_elements = np.unique(index.all(), return_counts=True)
-    print(unique_elements)
-    print(counts_elements)
+    unique_indicies, counts_indicies = np.unique(index.all(), return_counts=True)
+    print(names)
+    print(unique_indicies)
+    print(counts_indicies)
+
+    #store counts in the meta
+    results["meta"]["names"] = names    
+    #results["meta"]["unique"] = unique_indicies.tolist() #no point of showing this as it should be all index in names array
+    results["meta"]["counts"] = counts_indicies.tolist()
 
     #name
     # ['forcepsMinor' 'forcepsMajor' 'parietalCC' 'middleFrontalCC'
@@ -99,9 +104,15 @@ def validate_classification():
         results["errors"].append("names must be all unique")
 
     #names array should be as big or bigger than the number of unique elements
-    max_index = int(np.max(unique_elements))
+    max_index = int(np.max(unique_indicies))
     if max_index > len(names):
-        results["errors"].append("names array has size of "+str(len(names))+" when the max index value is "+str(max_index)+". This means not all names are listed in the names array at the corresponding index value")
+        results["errors"].append("names array has size of "+str(len(names))+" when the max index value is "+str(max_index)+". This means not all names are listed in the names array at the corresponding index value. Please re-index data in index array so that all indicies will have the corresponding items inside the names array")
+
+    #warn users if some tracts has 0-streamline
+    indicies_set = set(unique_indicies)
+    for i in range(len(names)):
+        if not (i+1) in indicies_set:
+            results["warnings"].append(names[i]+"(index:"+str(i+1)+") has no streamline")
 
     #for index in unique_elements:
     #    index = int(index)
@@ -112,7 +123,81 @@ def validate_classification():
     #    except IndexError:
     #        results["errors"].append("names array does not contain a name for classification index value of "+str(index))
 
+def create_plotly():
+    left_x= []
+    right_x = []
+    mid_x = []
+    left_y = []
+    right_y = []
+    mid_y = []
+
+    names = results["meta"]["names"]
+    counts = results["meta"]["counts"]
+    for i in range(len(names)):
+        name = names[i]
+        #detect if the name is for left/right/mid
+        left_pos = name.lower().find("left")
+        right_pos = name.lower().find("right")
+        if left_pos != -1:
+            name = name[:left_pos] + name[left_pos+4:].strip()
+            left_x.append(name)
+            left_y.append(counts[i+1])
+            
+        elif right_pos != -1:
+            name = name[:right_pos] + name[right_pos+5:].strip()
+            right_x.append(name)
+            right_y.append(counts[i+1])
+
+        else:
+            #assume middle
+            mid_x.append(name)
+            mid_y.append(counts[i+1])
+
+    #for count in results["meta"]["counts"]:
+    #    y.append(count)
+
+    graph = {
+        "type": "plotly",
+        "name": "Fiber counts",
+        "data": [
+            {
+                "type": "bar",
+                "name": "Left Tracts",
+                "x": left_x,
+                "y": left_y,
+            },
+            {
+                "type": "bar",
+                "name": "Right Tracts",
+                "x": right_x,
+                "y": right_y,
+            },
+            {
+                "type": "bar",
+                "name": "Mid Tracts",
+                "x": mid_x,
+                "y": mid_y,
+            }
+        ],
+        "layout": {
+            "barmode": "group",
+            "xaxis": {
+                "tickangle": 45
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "Stream Lines"
+            },
+            "margin": {
+                "b": 125,
+                "t": 10
+            }
+        }
+    }
+    results["brainlife"].append(graph)
+
 validate_classification()
+create_plotly()
 
 with open("product.json", "w") as fp:
     json.dump(results, fp)
