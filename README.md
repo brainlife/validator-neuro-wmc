@@ -1,4 +1,4 @@
-# For the deetailed definition of what WMC datatype is, please see
+For detailed definition of what WMC datatype is, please see
 
 > https://brainlife.io/datatype/5cc1d64c44947d8aea6b2d8b
 
