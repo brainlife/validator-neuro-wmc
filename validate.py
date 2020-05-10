@@ -20,9 +20,9 @@ if not os.path.exists("secondary"):
 
 # for now, we are just going to pass through everything
 
-if os.path.lexists("output/classification"):
-    os.remove("output/classification")
-os.symlink("../"+config["classification"], "output/classification")
+if os.path.lexists("output/classification.mat"):
+    os.remove("output/classification.mat")
+os.symlink("../"+config["classification"], "output/classification.mat")
 
 if os.path.lexists("output/tracts"):
     os.remove("output/tracts")
