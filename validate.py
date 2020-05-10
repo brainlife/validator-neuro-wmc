@@ -57,13 +57,23 @@ def validate_classification():
     np.set_printoptions(threshold=sys.maxsize)
     unique_indicies, counts_indicies = np.unique(index.all(), return_counts=True)
     print(names)
+    print(len(names))
     print(unique_indicies)
+    print(len(unique_indicies))
     print(counts_indicies)
+    print(len(counts_indicies))
 
     #store counts in the meta
-    results["meta"]["names"] = names    
-    #results["meta"]["unique"] = unique_indicies.tolist() #no point of showing this as it should be all index in names array
-    results["meta"]["counts"] = counts_indicies.tolist()
+    results["meta"]["tracts"] = []
+    results["meta"]["tracts"].append({"name": "unclassified", "index": 0, "count": 0})
+    for i in range(0, len(names)):
+        results["meta"]["tracts"].append({"name": names[i], "index": i+1, "count": 0})
+    for i in range(0, len(unique_indicies)):
+        index = unique_indicies[i]
+        count = counts_indicies[i]
+        results["meta"]["tracts"][index]["count"] = int(count)
+
+    #print(results["meta"]["tracts"])
 
     #name
     # ['forcepsMinor' 'forcepsMajor' 'parietalCC' 'middleFrontalCC'
@@ -100,9 +110,16 @@ def validate_classification():
                 break
 
     #names must be unique
-    if len(names) != len(np.unique(names)):
-        results["errors"].append("names must be all unique")
-
+    unique_names = np.unique(names)
+    if len(names) != len(unique_names):
+        check_names = []
+        duplicates = []
+        for name in names:
+            if name in check_names:
+                duplicates.append(name)
+            check_names.append(name)
+        results["errors"].append("All names must be all unique. duplicates:"+",".join(duplicates))
+            
     #names array should be as big or bigger than the number of unique elements
     max_index = int(np.max(unique_indicies))
     if max_index > len(names):
@@ -114,14 +131,9 @@ def validate_classification():
         if not (i+1) in indicies_set:
             results["warnings"].append(names[i]+"(index:"+str(i+1)+") has no streamline")
 
-    #for index in unique_elements:
-    #    index = int(index)
-    #    if index == 0:
-    #        continue
-    #    try:
-    #        name = names[index-1]
-    #    except IndexError:
-    #        results["errors"].append("names array does not contain a name for classification index value of "+str(index))
+    #TODO The number of entries in the .index vector should be EXACTLY EQUAL to the number of streamlines in the associated tractogram.
+    # compare it against meta["count"] from config
+
 
 def create_plotly():
     left_x= []
@@ -131,27 +143,27 @@ def create_plotly():
     right_y = []
     mid_y = []
 
-    names = results["meta"]["names"]
-    counts = results["meta"]["counts"]
-    for i in range(len(names)):
-        name = names[i]
+    for i in range(1, len(results["meta"]["tracts"])):
+        tract = results["meta"]["tracts"][i]
         #detect if the name is for left/right/mid
+        name = tract["name"]
+        count = tract["count"]
         left_pos = name.lower().find("left")
         right_pos = name.lower().find("right")
         if left_pos != -1:
             name = name[:left_pos] + name[left_pos+4:].strip()
             left_x.append(name)
-            left_y.append(counts[i+1])
+            left_y.append(count)
             
         elif right_pos != -1:
             name = name[:right_pos] + name[right_pos+5:].strip()
             right_x.append(name)
-            right_y.append(counts[i+1])
+            right_y.append(count)
 
         else:
             #assume middle
             mid_x.append(name)
-            mid_y.append(counts[i+1])
+            mid_y.append(count)
 
     #for count in results["meta"]["counts"]:
     #    y.append(count)

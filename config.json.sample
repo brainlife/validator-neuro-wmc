@@ -1,8 +1,11 @@
 {
-	".classification": "testdata/5d9168429842207eb17ec5ea/classification",
+	".classification": "testdata/5d9168429842207eb17ec5ea/classification.mat",
 	".tracts": "testdata/5d9168429842207eb17ec5ea/tracts",
 	".surfaces": "testdata/5d9168429842207eb17ec5ea/surfaces",
-	"classification": "testdata/classifiber/classification",
-	"tracts": "testdata/classifiber/tracts",
-	"surfaces": "testdata/classifiber/surfaces"
+	".classification": "testdata/classifiber/classification.mat",
+	".tracts": "testdata/classifiber/tracts",
+	".surfaces": "testdata/classifiber/surfaces",
+	"classification": "testdata/master/classification.mat",
+	"tracts": "testdata/master/tracts",
+	"surfaces": "testdata/master/surfaces"
 }
