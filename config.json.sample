@@ -5,6 +5,9 @@
 	".classification": "testdata/classifiber/classification.mat",
 	".tracts": "testdata/classifiber/tracts",
 	".surfaces": "testdata/classifiber/surfaces",
+	".classification": "testdata/sophia/classification.mat",
+	".tracts": "testdata/sophia/tracts",
+	".surfaces": "testdata/sophia/surfaces",
 	"classification": "testdata/master/classification.mat",
 	"tracts": "testdata/master/tracts",
 	"surfaces": "testdata/master/surfaces"

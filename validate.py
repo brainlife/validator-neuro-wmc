@@ -38,20 +38,22 @@ def validate_classification():
     m = sio.loadmat(config["classification"], squeeze_me=True)
     if "classification" not in m:
         results["errors"].append("no classification object");
-        return
+        return False
 
     try:
-        names = list(m["classification"]["names"].all())
+        names = m["classification"]["names"].all()
+        if not isinstance(names, np.ndarray):
+            names = [names]
+        names = list(names)
     except ValueError:
         results["errors"].append("no names field inside classification struct");
-        return
+        return False
 
     try:
         index = m["classification"]["index"]
-        #print(index)
     except ValueError:
         results["errors"].append("no index field inside classification struct");
-        return
+        return False
 
     #count numbers of values
     np.set_printoptions(threshold=sys.maxsize)
@@ -62,6 +64,10 @@ def validate_classification():
     print(len(unique_indicies))
     print(counts_indicies)
     print(len(counts_indicies))
+
+    if max(unique_indicies) > len(names):
+        results["errors"].append("max index("+str(max(unique_indicies))+") exceeds the number of names("+str(len(names)))
+        return False
 
     #store counts in the meta
     results["meta"]["tracts"] = []
@@ -118,7 +124,7 @@ def validate_classification():
             if name in check_names:
                 duplicates.append(name)
             check_names.append(name)
-        results["errors"].append("All names must be all unique. duplicates:"+",".join(duplicates))
+        results["errors"].append("All names must be unique. duplicates:"+",".join(duplicates))
             
     #names array should be as big or bigger than the number of unique elements
     max_index = int(np.max(unique_indicies))
@@ -134,6 +140,8 @@ def validate_classification():
     #TODO The number of entries in the .index vector should be EXACTLY EQUAL to the number of streamlines in the associated tractogram.
     # compare it against meta["count"] from config
 
+
+    return True
 
 def create_plotly():
     left_x= []
@@ -208,8 +216,8 @@ def create_plotly():
     }
     results["brainlife"].append(graph)
 
-validate_classification()
-create_plotly()
+if validate_classification():
+    create_plotly()
 
 with open("product.json", "w") as fp:
     json.dump(results, fp)
