@@ -75,7 +75,7 @@ def validate_classification():
     for i in range(0, len(names)):
         results["meta"]["tracts"].append({"name": names[i], "index": i+1, "count": 0})
     for i in range(0, len(unique_indicies)):
-        index = unique_indicies[i]
+        index = int(unique_indicies[i])
         count = counts_indicies[i]
         results["meta"]["tracts"][index]["count"] = int(count)
 
