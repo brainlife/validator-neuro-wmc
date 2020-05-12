@@ -5,6 +5,8 @@ import json
 import scipy.io as sio
 import numpy as np
 import sys
+import h5py
+import hdf5storage
 
 with open('config.json', encoding='utf8') as config_json:
     config = json.load(config_json)
@@ -35,29 +37,35 @@ os.symlink("../"+config["surfaces"], "output/surfaces")
 ############## validate 
 
 def validate_classification():
-    m = sio.loadmat(config["classification"], squeeze_me=True)
+    #m = sio.loadmat(config["classification"], squeeze_me=True)
+    m = hdf5storage.loadmat(config["classification"])
     if "classification" not in m:
         results["errors"].append("no classification object");
         return False
 
+    #print(m["classification"]["names"].item()[0])
     try:
-        names = m["classification"]["names"].all()
-        if not isinstance(names, np.ndarray):
-            names = [names]
-        names = list(names)
+        names = []
+        for name in m["classification"]["names"][0][0][0]:
+            names.append(name[0])
+        #if not isinstance(names, np.ndarray):
+        #    names = [names]
+        #names = list(names)
     except ValueError:
         results["errors"].append("no names field inside classification struct");
         return False
 
     try:
-        index = m["classification"]["index"]
+        index = np.array(m["classification"]["index"][0]).T[0]
+        #index = m["classification"]["index"].item()
     except ValueError:
         results["errors"].append("no index field inside classification struct");
         return False
 
     #count numbers of values
-    np.set_printoptions(threshold=sys.maxsize)
-    unique_indicies, counts_indicies = np.unique(index.all(), return_counts=True)
+    #np.set_printoptions(threshold=sys.maxsize)
+    #unique_indicies, counts_indicies = np.unique(index.all(), return_counts=True)
+    unique_indicies, counts_indicies = np.unique(index, return_counts=True)
     print(names)
     print(len(names))
     print(unique_indicies)
@@ -66,7 +74,7 @@ def validate_classification():
     print(len(counts_indicies))
 
     if max(unique_indicies) > len(names):
-        results["errors"].append("max index("+str(max(unique_indicies))+") exceeds the number of names("+str(len(names)))
+        results["errors"].append("max index("+str(max(unique_indicies))+") exceeds the number of names("+str(len(names))+")")
         return False
 
     #store counts in the meta
@@ -78,8 +86,6 @@ def validate_classification():
         index = int(unique_indicies[i])
         count = counts_indicies[i]
         results["meta"]["tracts"][index]["count"] = int(count)
-
-    #print(results["meta"]["tracts"])
 
     #name
     # ['forcepsMinor' 'forcepsMajor' 'parietalCC' 'middleFrontalCC'
@@ -111,7 +117,7 @@ def validate_classification():
             break
 
         for c in name:
-            if c.isspace():
+            if str(c).isspace():
                 results["warnings"].append("The name '"+name+"' should not contain whitespace")
                 break
 
@@ -124,7 +130,7 @@ def validate_classification():
             if name in check_names:
                 duplicates.append(name)
             check_names.append(name)
-        results["errors"].append("All names must be unique. duplicates:"+",".join(duplicates))
+        results["errors"].append("All names must be unique. duplicates:"+(",".join(duplicates)))
             
     #names array should be as big or bigger than the number of unique elements
     max_index = int(np.max(unique_indicies))
@@ -139,7 +145,6 @@ def validate_classification():
 
     #TODO The number of entries in the .index vector should be EXACTLY EQUAL to the number of streamlines in the associated tractogram.
     # compare it against meta["count"] from config
-
 
     return True
 
@@ -225,8 +230,13 @@ with open("product.json", "w") as fp:
 if len(results["errors"]) > 0:
     print("error detected")
     print(results["errors"])
+else:
+    print("no errors")
+
 if len(results["warnings"]) > 0:
     print("warnings detected")
     print(results["warnings"])
+else:
+    print("no warnings")
 print("done");
 
