@@ -37,10 +37,15 @@ os.symlink("../"+config["surfaces"], "output/surfaces")
 ############## validate 
 
 def validate_classification():
+
+    if not os.path.exists(config["classification"]):
+        results["errors"].append("classification.mat not found");
+        return False
+
     #m = sio.loadmat(config["classification"], squeeze_me=True)
     m = hdf5storage.loadmat(config["classification"])
     if "classification" not in m:
-        results["errors"].append("no classification object");
+        results["errors"].append("no classification object inside classification.mat");
         return False
 
     #print(m["classification"]["names"].item()[0])
@@ -238,5 +243,6 @@ if len(results["warnings"]) > 0:
     print(results["warnings"])
 else:
     print("no warnings")
+
 print("done");
 
