@@ -48,14 +48,12 @@ def validate_classification():
         results["errors"].append("no classification object inside classification.mat");
         return False
 
-    #print(m["classification"]["names"].item()[0])
     try:
         names = []
-        for name in m["classification"]["names"][0][0][0]:
-            names.append(name[0])
-        #if not isinstance(names, np.ndarray):
-        #    names = [names]
-        #names = list(names)
+        for name in m["classification"]["names"][0][0]:
+            #sometimes names are stored in odd(nested) structure
+            for subname in name:
+                names.append(subname[0])
     except ValueError:
         results["errors"].append("no names field inside classification struct");
         return False
