@@ -43,7 +43,8 @@ def validate_classification():
         return False
 
     #m = sio.loadmat(config["classification"], squeeze_me=True)
-    m = hdf5storage.loadmat(config["classification"])
+    m = hdf5storage.loadmat(config["classification"],variable_names="classification")
+                
     if "classification" not in m:
         results["errors"].append("no classification object inside classification.mat");
         return False
