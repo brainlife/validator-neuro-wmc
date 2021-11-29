@@ -28,11 +28,15 @@ os.symlink("../"+config["classification"], "output/classification.mat")
 
 if os.path.lexists("output/tracts"):
     os.remove("output/tracts")
-os.symlink("../"+config["tracts"], "output/tracts")
+
+if "tracts" in config:
+    os.symlink("../"+config["tracts"], "output/tracts")
 
 if os.path.lexists("output/surfaces"):
     os.remove("output/surfaces")
-os.symlink("../"+config["surfaces"], "output/surfaces")
+    
+if "surfaces" in config:
+    os.symlink("../"+config["surfaces"], "output/surfaces")
 
 ############## validate 
 
